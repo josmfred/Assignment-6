@@ -22,10 +22,33 @@ struct LamC{T}
     body :: T
 end
 
-
 struct AppC{T}
     fun :: T
     args :: Array{T}
 end
 
-ExprC = Union{NumC, StrC, IdC, CondC{ExprC}, LamC{ExprC}, AppC{ExprC}}
+ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
+
+struct NumV
+    num :: Real
+end
+
+struct StrV
+    str :: String
+end
+
+struct BoolV
+    val :: Bool
+end
+
+struct PrimV
+    op :: String
+end
+
+struct ClosV{T}
+    args :: Array{String}
+    body :: T
+    env :: Dict
+end
+
+Value = Union{NumV, StrV, BoolV, ClosV, PrimV}
