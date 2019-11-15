@@ -29,8 +29,37 @@ struct AppC{T}
 end
 
 ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
+
+struct NumV
+    num :: Real
+end
+
+struct StrV
+    str :: String
+end
+
+struct BoolV
+    val :: Bool
+end
+
+struct PrimV
+    op :: String
+end
+
+struct ClosV{T}
+    args :: Array{String}
+    body :: T
+    env :: Dict
+end
+
+Value = Union{NumV, StrV, BoolV, ClosV, PrimV}
+
+function interp(expr :: ExprC) :: Real
+    2
+end
 Env = AbstractDict{String, Value}
-top
+
+
 
 function interp(expr :: ExprC, env :: Env) :: Real
     @match expr begin
@@ -39,4 +68,13 @@ function interp(expr :: ExprC, env :: Env) :: Real
         IdC(sym) => error("IdC not yet implemented")
         LamC(params, body) => error("LamC not yet implemented")
         AppC(fun, args) => error("AppC not yet implemented")
+end
+
+function serialize(val : Value) :: String
+    @match expr begin
+        NumV(num) => repr(num)
+        StrV(str) => repr(str)
+        BoolV(bool) => repr(bool)
+        _ :: ClosV => "#<procedure>"
+        _ :: PrimV => "#<primop>"
 end
