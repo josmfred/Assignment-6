@@ -1,3 +1,4 @@
+Pkg.add("Match")
 
 struct NumC
     num :: Real
@@ -29,6 +30,11 @@ end
 
 ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
 
-function interp(expr :: ExprC) :: Real
-    2
+Env = AbstractDict{String, Value}
+
+function interp(expr :: ExprC, env :: Env) :: Real
+    @match expr begin
+        NumC(num) => NumV(num)
+        Str(str) => StrV(str)
+        IdC(sym) =>
 end
