@@ -22,10 +22,13 @@ struct LamC{T}
     body :: T
 end
 
-
 struct AppC{T}
     fun :: T
     args :: Array{T}
 end
 
-ExprC = Union{NumC, StrC, IdC, CondC{ExprC}, LamC{ExprC}, AppC{ExprC}}
+ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
+
+function interp(expr :: ExprC) :: Real
+    2
+end
