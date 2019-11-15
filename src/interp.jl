@@ -1,4 +1,5 @@
 Pkg.add("Match")
+using Match
 
 struct NumC
     num :: Real
@@ -61,20 +62,22 @@ Env = AbstractDict{String, Value}
 
 
 
-function interp(expr :: ExprC, env :: Env) :: Real
+function interp(expr :: ExprC, env :: Env) :: Value
     @match expr begin
         NumC(num) => NumV(num)
-        Str(str) => StrV(str)
+        StrC(str) => StrV(str)
         IdC(sym) => error("IdC not yet implemented")
         LamC(params, body) => error("LamC not yet implemented")
         AppC(fun, args) => error("AppC not yet implemented")
+    end
 end
 
-function serialize(val : Value) :: String
+function serialize(val :: Value) :: String
     @match expr begin
         NumV(num) => repr(num)
         StrV(str) => repr(str)
         BoolV(bool) => repr(bool)
         _ :: ClosV => "#<procedure>"
         _ :: PrimV => "#<primop>"
+    end
 end
