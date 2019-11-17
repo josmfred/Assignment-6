@@ -15,8 +15,11 @@ end
 end
 
 @testset "interp tests" begin
-    @test interp(NumC(10), Dict{String, Value}()) == NumV(10)
-    @test interp(StrC("hello"), Dict{String, Value}()) == StrV("hello")
+    @test interp(NumC(10), topEnv) == NumV(10)
+    @test interp(StrC("hello"), topEnv) == StrV("hello")
+    @test interp(StrC("hello"), topEnv) == StrV("hello")
+    @test interp(CondC(IdC("true"), NumC(12), StrC("hello")), topEnv) == NumV(12)
+    @test interp(CondC(IdC("false"), NumC(12), StrC("hello")), topEnv) == StrV("hello")
 end
 
 @testset "parse tests" begin

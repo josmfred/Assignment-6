@@ -4,62 +4,68 @@ Pkg.add("DataStructures")
 using Match
 using DataStructures
 
-struct NumC
+abstract type ExprC end
+abstract type Value end
+
+struct NumC <: ExprC
     num :: Real
 end
 
-struct StrC
+struct StrC <: ExprC
     str :: String
 end
 
-struct IdC
+struct IdC <: ExprC
     str :: String
 end
 
-struct CondC{T}
-    cond :: T
-    success :: T
-    fail :: T
+struct CondC <: ExprC
+    cond :: ExprC
+    success :: ExprC
+    fail :: ExprC
 end
 
-struct LamC{T}
+struct LamC <: ExprC
     params :: LinkedList{String}
-    body :: T
+    body :: ExprC
 end
 
-struct AppC{T}
-    fun :: T
-    args :: LinkedList{T}
+struct AppC <: ExprC
+    fun :: ExprC
+    args :: LinkedList{ExprC}
 end
 
-ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
 
-struct NumV
+struct NumV <: Value
     num :: Real
 end
 
-struct StrV
+struct StrV <: Value
     str :: String
 end
 
-struct BoolV
+struct BoolV <: Value
     val :: Bool
 end
 
-struct PrimV
+struct PrimV <: Value
     op :: String
 end
 
-struct ClosV{T}
+struct NullV <: Value
+end
+
+struct ClosV <: Value
     params :: LinkedList{String}
-    body :: T
+    body :: ExprC
     env :: Dict
 end
 
-Value = Union{NumV, StrV, BoolV, ClosV, PrimV}
 
 Env = AbstractDict{String, Value}
-topEnv = Dict{String, Value}()
+
+topEnv = Dict{String, Value}(("true" => BoolV(true)),
+                             ("false" => BoolV(false)))
 
 # Combines parsing and interpreting at the top level
 # Currently does not support pasing
@@ -73,7 +79,18 @@ function interp(expr :: ExprC, env :: Env) :: Value
     @match expr begin
         NumC(num) => NumV(num)
         StrC(str) => StrV(str)
-        IdC(sym) => error("IdC not yet implemented")
+        CondC(c, s, f) => begin
+                            isSuccessV = interp(c, env)
+                            @match isSuccessV begin
+                                BoolV(isSuccess) => if isSuccess
+                                                        interp(s, env)
+                                                    else
+                                                        interp(f, env)
+                                                    end
+                                _ :: Value => error("RGME: $serialize(_) is not truthy but used as condition")
+                            end
+                        end
+        IdC(id) => lookup(id, env)
         LamC(params, body) => error("LamC not yet implemented")
         AppC(fun, args) => error("AppC not yet implemented")
     end
@@ -87,5 +104,14 @@ function serialize(val :: Value) :: String
         BoolV(bool) => repr(bool)
         _ :: ClosV => "#<procedure>"
         _ :: PrimV => "#<primop>"
+    end
+end
+
+
+function lookup(id :: String, env :: Env) :: Value
+    if haskey(env, id)
+        get(env, id, NullV())
+    else
+        error("RGME: unbound identifier $id")
     end
 end
