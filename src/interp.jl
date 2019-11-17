@@ -1,3 +1,5 @@
+using Pkg
+
 Pkg.add("Match")
 Pkg.add("DataStructures")
 
