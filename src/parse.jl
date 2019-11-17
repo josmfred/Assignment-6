@@ -1,6 +1,6 @@
-Pkg.add("Match")
+import Base.parse
 
-function checknumstr(sexp :: String) :: Bool
+function check_numstr(sexp :: String) :: Bool
     try
         num = parse(Float64, sexp)
         if isa(num, Real)
@@ -13,17 +13,29 @@ function checknumstr(sexp :: String) :: Bool
     end
 end
 
-println(checknumstr("123"))
-println(checknumstr("123a"))
-
-function parsenumstr(sexp :: String) :: ExprC
+function parse_numstr(sexp :: String) :: ExprC
     NumC(parse(Float64, sexp))
 end
 
-println(parsenumstr("123"))
+function make_array(sexp :: String) :: Array{String,1}
+    return split(sexp, r"[ ]")
+end
+
+function remove_paren(sexp :: String) :: String
+    return strip(sexp, ['(',')'])
+end
 
 function parse(sexp :: String) :: ExprC
-    if (checknumstr(sexp))
-        parsenumstr(sexp)
+    rm_paren = remove_paren(sexp)
+    arr_sexp = make_array(rm_paren)
+
+    if (length(arr_sexp) == 1)
+        if (check_numstr(arr_sexp))
+            (parse_numstr(arr_sexp))
+        end
+    #=
+    else if (length(arr_sexp) == 3)
+        # make an AppC
+    =#
     end
 end
