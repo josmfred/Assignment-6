@@ -1,5 +1,8 @@
 Pkg.add("Match")
+Pkg.add("DataStructures")
+
 using Match
+using DataStructures
 
 struct NumC
     num :: Real
@@ -20,13 +23,13 @@ struct CondC{T}
 end
 
 struct LamC{T}
-    params :: Array{String}
+    params :: LinkedList{String}
     body :: T
 end
 
 struct AppC{T}
     fun :: T
-    args :: Array{T}
+    args :: LinkedList{T}
 end
 
 ExprC = Union{NumC, StrC, IdC, CondC, LamC, AppC}
@@ -48,20 +51,24 @@ struct PrimV
 end
 
 struct ClosV{T}
-    args :: Array{String}
+    params :: LinkedList{String}
     body :: T
     env :: Dict
 end
 
 Value = Union{NumV, StrV, BoolV, ClosV, PrimV}
 
-function interp(expr :: ExprC) :: Real
-    2
-end
 Env = AbstractDict{String, Value}
+topEnv = Dict{String, Value}()
 
+# Combines parsing and interpreting at the top level
+# Currently does not support pasing
+#  TODO Change expr type to String and add parsing
+function top_interp(expr :: ExprC) :: String
+    serialize(interp(expr, topEnv))
+end
 
-
+#Interprets an expression in the given enviroment.
 function interp(expr :: ExprC, env :: Env) :: Value
     @match expr begin
         NumC(num) => NumV(num)
@@ -72,8 +79,9 @@ function interp(expr :: ExprC, env :: Env) :: Value
     end
 end
 
+# Serializes a value into a human readable string
 function serialize(val :: Value) :: String
-    @match expr begin
+    @match val begin
         NumV(num) => repr(num)
         StrV(str) => repr(str)
         BoolV(bool) => repr(bool)
