@@ -35,7 +35,7 @@ struct ClosV <: Value
     env :: Env
 end
 
-topEnv = Env(("+" => PrimV("+")),
+top_env = Env(("+" => PrimV("+")),
              ("-" => PrimV("-")),
              ("*" => PrimV("*")),
              ("/" => PrimV("/")),
@@ -66,7 +66,7 @@ function interp(expr :: ExprC, env :: Env) :: Value
             argVs = map(arg -> interp(arg, env), args)
             @match interp(fun, env) begin
                 ClosV(params, body, clos_env) => interp(body, extend_env(clos_env, params, argVs))
-                PrimV(op) => error("Primops not implemented yet")
+                PrimV(op) => apply_primop(op, argVs)
                 v :: Value =>  throw(RGMEError("non-procedure " * serialize(v) * " cannot be called"))
             end
         end
@@ -102,4 +102,43 @@ function lookup(id :: String, env :: Env) :: Value
     else
         throw(RGMEError("unbound identifier $id"))
     end
+end
+
+#=
+This is the section for the primops. Status of primops:
+    +           Done
+    -           TODO
+    *           TODO
+    /           TODO
+    <=          TODO
+    equal?      Done
+=#
+
+# Adds two values (+ is only defined for NumV)
+function val_add(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => NumV(v1 + v2)
+        _ => throw(RGMEError("unable to add values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Compares two values
+function val_eq(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(l), NumV(r)] => BoolV(l == r)
+        [BoolV(l), BoolV(r)] => BoolV(l == r)
+        [StrV(l), StrV(r)] => BoolV(l == r)
+        _ => BoolV(false)
+    end
+end
+
+# A mapping from op identifiers to the corresponding functions
+prim_map = Dict{String, Function}(("+" => val_add),
+                                  ("equal?" => val_eq))
+
+# Applies the appropriate primop for a given identifier
+function apply_primop(op :: String, vals :: Vector{<:Value}) :: Value
+    prim_map[op](vals)
 end

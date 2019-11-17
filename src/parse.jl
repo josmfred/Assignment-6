@@ -24,7 +24,8 @@ end
 
 println(parsenumstr("123"))
 
-# Cannot use parse becuase it is reserved
+
+# Cannot use parse becuase it is reserved.
 function exprParse(sexp :: String) :: ExprC
     if (checknumstr(sexp))
         parsenumstr(sexp)
