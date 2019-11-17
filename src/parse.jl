@@ -4,6 +4,7 @@ Pkg.add("Match")
 
 include("core.jl")
 
+
 function checknumstr(sexp :: String) :: Bool
     try
         num = parse(Float64, sexp)
