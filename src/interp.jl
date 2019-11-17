@@ -1,40 +1,16 @@
+using Pkg
+
 Pkg.add("Match")
 Pkg.add("DataStructures")
+
+include("core.jl")
 
 using Match
 using DataStructures
 
-abstract type ExprC end
 abstract type Value end
 
-struct NumC <: ExprC
-    num :: Real
-end
-
-struct StrC <: ExprC
-    str :: String
-end
-
-struct IdC <: ExprC
-    str :: String
-end
-
-struct CondC <: ExprC
-    cond :: ExprC
-    success :: ExprC
-    fail :: ExprC
-end
-
-struct LamC <: ExprC
-    params :: LinkedList{String}
-    body :: ExprC
-end
-
-struct AppC <: ExprC
-    fun :: ExprC
-    args :: LinkedList{ExprC}
-end
-
+Env = Dict{String, Value}
 
 struct NumV <: Value
     num :: Real
@@ -56,23 +32,19 @@ struct NullV <: Value
 end
 
 struct ClosV <: Value
-    params :: LinkedList{String}
+    params :: Vector{String}
     body :: ExprC
-    env :: Dict
+    env :: Env
 end
 
-
-Env = AbstractDict{String, Value}
-
-topEnv = Dict{String, Value}(("true" => BoolV(true)),
-                             ("false" => BoolV(false)))
-
-# Combines parsing and interpreting at the top level
-# Currently does not support pasing
-#  TODO Change expr type to String and add parsing
-function top_interp(expr :: ExprC) :: String
-    serialize(interp(expr, topEnv))
-end
+top_env = Env(("+" => PrimV("+")),
+             ("-" => PrimV("-")),
+             ("*" => PrimV("*")),
+             ("/" => PrimV("/")),
+             ("<=" => PrimV("<=")),
+             ("equal?" => PrimV("equal?")),
+             ("true" => BoolV(true)),
+             ("false" => BoolV(false)))
 
 #Interprets an expression in the given enviroment.
 function interp(expr :: ExprC, env :: Env) :: Value
@@ -80,19 +52,26 @@ function interp(expr :: ExprC, env :: Env) :: Value
         NumC(num) => NumV(num)
         StrC(str) => StrV(str)
         CondC(c, s, f) => begin
-                            isSuccessV = interp(c, env)
-                            @match isSuccessV begin
-                                BoolV(isSuccess) => if isSuccess
-                                                        interp(s, env)
-                                                    else
-                                                        interp(f, env)
-                                                    end
-                                _ :: Value => error("RGME: $serialize(_) is not truthy but used as condition")
-                            end
-                        end
+            isSuccessV = interp(c, env)
+            @match isSuccessV begin
+                BoolV(isSuccess) => if isSuccess
+                                        interp(s, env)
+                                    else
+                                        interp(f, env)
+                                    end
+                v :: Value => throw(RGMEError(serialize(v) * " is not truthy but used as condition"))
+            end
+        end
         IdC(id) => lookup(id, env)
-        LamC(params, body) => error("LamC not yet implemented")
-        AppC(fun, args) => error("AppC not yet implemented")
+        LamC(params, body) => ClosV(params, body, copy(env)) # Deep copy is not needed since Values don't mutate
+        AppC(fun, args) => begin
+            argVs = map(arg -> interp(arg, env), args)
+            @match interp(fun, env) begin
+                ClosV(params, body, clos_env) => interp(body, extend_env(clos_env, params, argVs))
+                PrimV(op) => apply_primop(op, argVs)
+                v :: Value =>  throw(RGMEError("non-procedure " * serialize(v) * " cannot be called"))
+            end
+        end
     end
 end
 
@@ -107,11 +86,61 @@ function serialize(val :: Value) :: String
     end
 end
 
+# Extends the given enviroment with the given bindings, can shadow
+function extend_env(env :: Env, ids :: Vector{String}, argVs :: Vector{<:Value}) :: Env
+    if length(ids) != length(argVs)
+        throw(RGMEError("number of arguments to lambda does not match arity"))
+    end
+    for (id, argV) in zip(ids, argVs)
+        env[id] = argV
+    end
+    env
+end
 
+# Looks up the value bound to an identifier in the enviroment
 function lookup(id :: String, env :: Env) :: Value
     if haskey(env, id)
         get(env, id, NullV())
     else
-        error("RGME: unbound identifier $id")
+        throw(RGMEError("unbound identifier $id"))
     end
+end
+
+#=
+This is the section for the primops. Status of primops:
+    +           Done
+    -           TODO
+    *           TODO
+    /           TODO
+    <=          TODO
+    equal?      Done
+=#
+
+# Adds two values (+ is only defined for NumV)
+function val_add(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => NumV(v1 + v2)
+        _ => throw(RGMEError("unable to add values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Compares two values
+function val_eq(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(l), NumV(r)] => BoolV(l == r)
+        [BoolV(l), BoolV(r)] => BoolV(l == r)
+        [StrV(l), StrV(r)] => BoolV(l == r)
+        _ => BoolV(false)
+    end
+end
+
+# A mapping from op identifiers to the corresponding functions
+prim_map = Dict{String, Function}(("+" => val_add),
+                                  ("equal?" => val_eq))
+
+# Applies the appropriate primop for a given identifier
+function apply_primop(op :: String, vals :: Vector{<:Value}) :: Value
+    prim_map[op](vals)
 end
