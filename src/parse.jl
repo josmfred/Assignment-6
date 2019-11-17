@@ -16,10 +16,14 @@ end
 println(checknumstr("123"))
 println(checknumstr("123a"))
 
-function parsenumstr(sexp :: String) :: Real
-    if (checknumstr(sexp))
-        parse(Float64, sexp)
-    end
+function parsenumstr(sexp :: String) :: ExprC
+    NumC(parse(Float64, sexp))
 end
 
 println(parsenumstr("123"))
+
+function parse(sexp :: String) :: ExprC
+    if (checknumstr(sexp))
+        parsenumstr(sexp)
+    end
+end
