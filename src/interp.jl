@@ -1,40 +1,14 @@
 Pkg.add("Match")
 Pkg.add("DataStructures")
 
+include("core.jl")
+
 using Match
 using DataStructures
 
-abstract type ExprC end
 abstract type Value end
 
-struct NumC <: ExprC
-    num :: Real
-end
-
-struct StrC <: ExprC
-    str :: String
-end
-
-struct IdC <: ExprC
-    str :: String
-end
-
-struct CondC <: ExprC
-    cond :: ExprC
-    success :: ExprC
-    fail :: ExprC
-end
-
-struct LamC <: ExprC
-    params :: LinkedList{String}
-    body :: ExprC
-end
-
-struct AppC <: ExprC
-    fun :: ExprC
-    args :: LinkedList{ExprC}
-end
-
+Env = Dict{String, Value}
 
 struct NumV <: Value
     num :: Real
@@ -56,23 +30,19 @@ struct NullV <: Value
 end
 
 struct ClosV <: Value
-    params :: LinkedList{String}
+    params :: Vector{String}
     body :: ExprC
-    env :: Dict
+    env :: Env
 end
 
-
-Env = AbstractDict{String, Value}
-
-topEnv = Dict{String, Value}(("true" => BoolV(true)),
-                             ("false" => BoolV(false)))
-
-# Combines parsing and interpreting at the top level
-# Currently does not support pasing
-#  TODO Change expr type to String and add parsing
-function top_interp(expr :: ExprC) :: String
-    serialize(interp(expr, topEnv))
-end
+topEnv = Env(("+" => PrimV("+")),
+             ("-" => PrimV("-")),
+             ("*" => PrimV("*")),
+             ("/" => PrimV("/")),
+             ("<=" => PrimV("<=")),
+             ("equal?" => PrimV("equal?")),
+             ("true" => BoolV(true)),
+             ("false" => BoolV(false)))
 
 #Interprets an expression in the given enviroment.
 function interp(expr :: ExprC, env :: Env) :: Value
@@ -80,19 +50,26 @@ function interp(expr :: ExprC, env :: Env) :: Value
         NumC(num) => NumV(num)
         StrC(str) => StrV(str)
         CondC(c, s, f) => begin
-                            isSuccessV = interp(c, env)
-                            @match isSuccessV begin
-                                BoolV(isSuccess) => if isSuccess
-                                                        interp(s, env)
-                                                    else
-                                                        interp(f, env)
-                                                    end
-                                _ :: Value => error("RGME: $serialize(_) is not truthy but used as condition")
-                            end
-                        end
+            isSuccessV = interp(c, env)
+            @match isSuccessV begin
+                BoolV(isSuccess) => if isSuccess
+                                        interp(s, env)
+                                    else
+                                        interp(f, env)
+                                    end
+                v :: Value => throw(RGMEError(serialize(v) * " is not truthy but used as condition"))
+            end
+        end
         IdC(id) => lookup(id, env)
-        LamC(params, body) => error("LamC not yet implemented")
-        AppC(fun, args) => error("AppC not yet implemented")
+        LamC(params, body) => ClosV(params, body, copy(env)) # Deep copy is not needed since Values don't mutate
+        AppC(fun, args) => begin
+            argVs = map(arg -> interp(arg, env), args)
+            @match interp(fun, env) begin
+                ClosV(params, body, clos_env) => interp(body, extend_env(clos_env, params, argVs))
+                PrimV(op) => error("Primops not implemented yet")
+                v :: Value =>  throw(RGMEError("non-procedure " * serialize(v) * " cannot be called"))
+            end
+        end
     end
 end
 
@@ -107,11 +84,22 @@ function serialize(val :: Value) :: String
     end
 end
 
+# Extends the given enviroment with the given bindings, can shadow
+function extend_env(env :: Env, ids :: Vector{String}, argVs :: Vector{<:Value}) :: Env
+    if length(ids) != length(argVs)
+        throw(RGMEError("number of arguments to lambda does not match arity"))
+    end
+    for (id, argV) in zip(ids, argVs)
+        env[id] = argV
+    end
+    env
+end
 
+# Looks up the value bound to an identifier in the enviroment
 function lookup(id :: String, env :: Env) :: Value
     if haskey(env, id)
         get(env, id, NullV())
     else
-        error("RGME: unbound identifier $id")
+        throw(RGMEError("unbound identifier $id"))
     end
 end

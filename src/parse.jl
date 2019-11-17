@@ -1,5 +1,7 @@
 Pkg.add("Match")
 
+include("core.jl")
+
 function checknumstr(sexp :: String) :: Bool
     try
         num = parse(Float64, sexp)
@@ -22,7 +24,8 @@ end
 
 println(parsenumstr("123"))
 
-function parse(sexp :: String) :: ExprC
+# Cannot use parse becuase it is reserved
+function exprParse(sexp :: String) :: ExprC
     if (checknumstr(sexp))
         parsenumstr(sexp)
     end
