@@ -31,23 +31,32 @@ function get_element(arr :: Array{String,1}, num :: Integer) :: String
 end
 
 function parse_sexp(sexp :: String) :: ExprC
+
     rm_paren = remove_paren(sexp)
     arr_sexp = make_array(rm_paren)
 
     if (length(arr_sexp) == 1)
         if (check_numstr(sexp))
             parse_numstr(sexp)
+
         else
             IdC(sexp)
+
         end
-    elseif (length(arr_sexp) == 3)
-        primop_sym = get_element(arr_sexp,1)
+    elseif (length(arr_sexp) >= 3)
+
+        sym = get_element(arr_sexp,1)
         lhs_str = get_element(arr_sexp,2)
         rhs_str = get_element(arr_sexp,3)
 
-        lhs_numc = parse_numstr(lhs_str)
-        rhs_numc = parse_numstr(rhs_str)
+        if (sym == "if")
+            CondC(StrC(sym),StrC(lhs_str),StrC(rhs_str))
 
-        AppC(IdC(primop_sym),[Vector lhs_numc rhs_numc])
+        elseif (sym == "+" || sym == "-" || sym == "*" || sym == "/")
+            lhs_numc = parse_numstr(lhs_str)
+            rhs_numc = parse_numstr(rhs_str)
+            AppC(IdC(sym),[Vector lhs_numc rhs_numc])
+
+        end
     end
 end
