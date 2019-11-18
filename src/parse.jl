@@ -1,4 +1,5 @@
 import Base.parse
+include("core.jl")
 
 function check_numstr(sexp :: String) :: Bool
     try
@@ -25,17 +26,28 @@ function remove_paren(sexp :: String) :: String
     return strip(sexp, ['(',')'])
 end
 
-function parse(sexp :: String) :: ExprC
+function get_element(arr :: Array{String,1}, num :: Integer) :: String
+    getindex(arr,num)
+end
+
+function parse_sexp(sexp :: String) :: ExprC
     rm_paren = remove_paren(sexp)
     arr_sexp = make_array(rm_paren)
 
     if (length(arr_sexp) == 1)
-        if (check_numstr(arr_sexp))
-            (parse_numstr(arr_sexp))
+        if (check_numstr(sexp))
+            parse_numstr(sexp)
+        else
+            IdC(sexp)
         end
-    #=
-    else if (length(arr_sexp) == 3)
-        # make an AppC
-    =#
+    elseif (length(arr_sexp) == 3)
+        primop_sym = get_element(arr_sexp,1)
+        lhs_str = get_element(arr_sexp,2)
+        rhs_str = get_element(arr_sexp,3)
+
+        lhs_numc = parse_numstr(lhs_str)
+        rhs_numc = parse_numstr(rhs_str)
+
+        AppC(IdC(primop_sym),[Vector lhs_numc rhs_numc])
     end
 end
