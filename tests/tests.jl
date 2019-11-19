@@ -5,9 +5,14 @@ include("../src/parse.jl")
 using Test
 
 
-#@testset "top_interp test" begin
-#    @test top_interp("10") == "10.0"
-#end
+@testset "top_interp test" begin
+    @test top_interp("10") == "10.0"
+    @test top_interp("(+ 1 3)") == "4.0"
+    # need rest of primops done for these
+    #@test top_interp("(- 3 1)") == "2.0"
+    #@test top_interp("(* 1 2)") == "2.0"
+    #@test top_interp("({/ (- 13 3) (* 1 5))") == "2.0"
+end
 
 @testset "serialize test" begin
     @test serialize(NumV(12.3)) == "12.3"
