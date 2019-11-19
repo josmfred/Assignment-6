@@ -19,11 +19,14 @@ function parse_numstr(sexp :: String) :: ExprC
 end
 
 function make_array(sexp :: String) :: Array{String,1}
-    return split(sexp, r"[ ]")
+    split(sexp, r"[ ]")
 end
 
 function remove_paren(sexp :: String) :: String
-    return strip(sexp, ['(',')'])
+    strip(sexp, ['(',')'])
+    #=snip(s::String) = s[nextind(s,1):end]
+    snip(sexp)
+    chop(sexp)=#
 end
 
 function get_element(arr :: Array{String,1}, num :: Integer) :: String
@@ -33,6 +36,7 @@ end
 function parse_sexp(sexp :: String) :: ExprC
 
     rm_paren = remove_paren(sexp)
+
     arr_sexp = make_array(rm_paren)
 
     if (length(arr_sexp) == 1)
@@ -43,7 +47,7 @@ function parse_sexp(sexp :: String) :: ExprC
             IdC(sexp)
 
         end
-    elseif (length(arr_sexp) >= 3)
+    elseif (length(arr_sexp) == 3)
 
         sym = get_element(arr_sexp,1)
         lhs_str = get_element(arr_sexp,2)
