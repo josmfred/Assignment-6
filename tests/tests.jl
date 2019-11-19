@@ -60,5 +60,5 @@ end
     @test parse_sexp("-") == IdC("-")
     @test parse_sexp("5") == NumC(5.0)
     @test parse_sexp("(if test then else)") == CondC(IdC("test"), IdC("then"), IdC("else"))
-    #@test parse_sexp("(+ 3 4)") == AppC(IdC("+"), ExprC[NumC(3.0), NumC(4.0)])
+    #@test parse_sexp("(- 3 4)") == AppC(IdC("-"), ExprC[NumC(3.0), NumC(4.0)])
 end

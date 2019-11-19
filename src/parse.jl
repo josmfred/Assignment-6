@@ -54,9 +54,9 @@ function parse_sexp(sexp :: String) :: ExprC
         rhs_str = get_element(arr_sexp,3)
 
         if (sym == "+" || sym == "-" || sym == "*" || sym == "/")
-            lhs_numc = parse_numstr(lhs_str)
-            rhs_numc = parse_numstr(rhs_str)
-            AppC(IdC(sym), [lhs_numc, rhs_numc])
+            #lhs_numc = parse_numstr(lhs_str)
+            #rhs_numc = parse_numstr(rhs_str)
+            AppC(IdC(sym), [parse_sexp(lhs_str), parse_sexp(rhs_str)])
         end
 
     elseif (length(arr_sexp) > 3)
