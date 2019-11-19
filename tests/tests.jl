@@ -7,6 +7,11 @@ using Test
 
 @testset "top_interp test" begin
     @test top_interp("10") == "10.0"
+    @test top_interp("(+ 1 3)") == "4.0"
+    # need rest of primops done for these
+    #@test top_interp("(- 3 1)") == "2.0"
+    #@test top_interp("(* 1 2)") == "2.0"
+    #@test top_interp("({/ (- 13 3) (* 1 5))") == "2.0"
 end
 
 @testset "serialize test" begin
@@ -45,4 +50,11 @@ end
 
 
 @testset "parse tests" begin
+    @test remove_paren("(5)") == "5"
+    @test check_numstr("5") == true
+    @test parse_numstr("5") == NumC(5.0)
+    @test make_array("if test then else") == ["if", "test", "then", "else"]
+    @test parse_sexp("+") == IdC("+")
+    @test parse_sexp("5") == NumC(5.0)
+    #@test parse_sexp("(+ 3 4)") == AppC(IdC("+"), [NumC(3.0), NumC(4.0)]) #i don't know why this doesn't pass
 end
