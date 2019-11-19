@@ -55,7 +55,7 @@ function parse_sexp(sexp :: String) :: ExprC
         elseif (sym == "+" || sym == "-" || sym == "*" || sym == "/")
             lhs_numc = parse_numstr(lhs_str)
             rhs_numc = parse_numstr(rhs_str)
-            AppC(IdC(sym),[Vector lhs_numc rhs_numc])
+            AppC(IdC(sym), [lhs_numc, rhs_numc])
 
         end
     end
