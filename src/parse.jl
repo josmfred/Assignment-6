@@ -67,7 +67,7 @@ function parse_sexp(sexp :: String) :: ExprC
         els = get_element(arr_sexp,4)
 
         if (sym == "if")
-            CondC(StrC(tst),StrC(thn),StrC(els))
+            CondC(parse_sexp(tst),parse_sexp(thn),parse_sexp(els))
         end
 
     end
