@@ -53,14 +53,22 @@ function parse_sexp(sexp :: String) :: ExprC
         lhs_str = get_element(arr_sexp,2)
         rhs_str = get_element(arr_sexp,3)
 
-        if (sym == "if")
-            CondC(StrC(sym),StrC(lhs_str),StrC(rhs_str))
-
-        elseif (sym == "+" || sym == "-" || sym == "*" || sym == "/")
+        if (sym == "+" || sym == "-" || sym == "*" || sym == "/")
             lhs_numc = parse_numstr(lhs_str)
             rhs_numc = parse_numstr(rhs_str)
             AppC(IdC(sym), [lhs_numc, rhs_numc])
-
         end
+
+    elseif (length(arr_sexp) > 3)
+
+        sym = get_element(arr_sexp,1)
+        tst = get_element(arr_sexp,2)
+        thn = get_element(arr_sexp,3)
+        els = get_element(arr_sexp,4)
+
+        if (sym == "if")
+            CondC(StrC(tst),StrC(thn),StrC(els))
+        end
+
     end
 end

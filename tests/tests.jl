@@ -56,5 +56,5 @@ end
     @test make_array("if test then else") == ["if", "test", "then", "else"]
     @test parse_sexp("+") == IdC("+")
     @test parse_sexp("5") == NumC(5.0)
-    #@test parse_sexp("(+ 3 4)") == AppC(IdC("+"), [NumC(3.0), NumC(4.0)]) #i don't know why this doesn't pass
+    @test parse_sexp("(+ 3 4)") == AppC(IdC("+"), ExprC[NumC(3.0), NumC(4.0)])
 end
