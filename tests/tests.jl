@@ -50,11 +50,14 @@ end
 
 
 @testset "parse tests" begin
-    @test remove_paren("(5)") == "5"
+    @test remove_paren("(+ 1 2)") == "+ 1 2"
     @test check_numstr("5") == true
+    @test check_numstr("abc") == false
     @test parse_numstr("5") == NumC(5.0)
     @test make_array("if test then else") == ["if", "test", "then", "else"]
-    @test parse_sexp("+") == IdC("+")
+    @test make_array("+ 3 4") == ["+", "3", "4"]
+    @test parse_sexp("-") == IdC("-")
     @test parse_sexp("5") == NumC(5.0)
-    @test parse_sexp("(+ 3 4)") == AppC(IdC("+"), ExprC[NumC(3.0), NumC(4.0)])
+    @test parse_sexp("(if test then else)") == CondC(StrC("test"), StrC("then"), StrC("else"))
+    #@test parse_sexp("(+ 3 4)") == AppC(IdC("+"), ExprC[NumC(3.0), NumC(4.0)])
 end
