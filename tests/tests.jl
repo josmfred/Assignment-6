@@ -8,10 +8,11 @@ using Test
 
 @testset "top_interp test" begin
     @test top_interp("10") == "10.0"
-    #@test top_interp("(+ 1 3)") == "4.0"
-    #@test top_interp("(- 3 1)") == "2.0"
+    @test top_interp("(+ 1 3)") == "4.0"
+    @test top_interp("(- 3 1)") == "2.0"
     @test top_interp("(* 1 2)") == "2.0"
-    #@test top_interp("(/ (- 13 3) (* 1 5))") == "2.0"  # TODO: fix parse error
+    #@test top_interp("(/ (- 13 3) (* 1 5))") == "2.0"
+    # TODO: fix parse error
     # TODO: test comparison primops
 end
 
@@ -61,4 +62,5 @@ end
     @test parse_sexp("5") == NumC(5.0)
     @test parse_sexp("(if test then else)") == CondC(IdC("test"), IdC("then"), IdC("else"))
     #@test parse_sexp("(- 3 4)") == AppC(IdC("-"), ExprC[NumC(3.0), NumC(4.0)])
+    # TODO: compare pointers that matches evaluated and result ExprC
 end
