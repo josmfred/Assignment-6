@@ -1,7 +1,7 @@
 import Base.parse
 include("core.jl")
 
-#TODO: add purpose statements, fix tests: line 14 bug
+#TODO: add purpose statements, fix tests.jl: line 14 bug
 function check_numstr(sexp :: String) :: Bool
     try
         num = parse(Float64, sexp)
