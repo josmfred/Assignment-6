@@ -46,7 +46,7 @@ top_env = Env(("+" => PrimV("+")),
              ("true" => BoolV(true)),
              ("false" => BoolV(false)))
 
-#Interprets an expression in the given enviroment.
+# Interprets an expression in the given enviroment.
 function interp(expr :: ExprC, env :: Env) :: Value
     @match expr begin
         NumC(num) => NumV(num)
@@ -106,16 +106,6 @@ function lookup(id :: String, env :: Env) :: Value
     end
 end
 
-#=
-This is the section for the primops. Status of primops:
-    +           Done
-    -           TODO
-    *           TODO
-    /           TODO
-    <=          TODO
-    equal?      Done
-=#
-
 # Adds two values (+ is only defined for NumV)
 function val_add(vals :: Vector{<:Value}) :: Value
     @match vals begin
@@ -126,7 +116,53 @@ function val_add(vals :: Vector{<:Value}) :: Value
     end
 end
 
-# Compares two values
+# Subtracts two values (- is only defined for NumV)
+function val_subtract(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => NumV(v1 - v2)
+        _ => throw(RGMEError("unable to subtract values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Multiplies two values (* is only defined for NumV)
+function val_multiply(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => NumV(v1 * v2)
+        _ => throw(RGMEError("unable to multiply values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Divides two values (/ is only defined for NumV)
+function val_divide(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => if v2 == 0
+                                    throw(RGMEError("divide by zero ["
+                                                         * join(map(x -> serialize(x), vals), ", ")
+                                                         * "]"))
+                                else
+                                    NumV(v1 / v2)
+                                end
+        _ => throw(RGMEError("unable to divide values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Determines if first value is greater than or equal to second value (<= is only defined for NumV)
+function val_lte(vals :: Vector{<:Value}) :: Value
+    @match vals begin
+        [NumV(v1), NumV(v2)] => BoolV(v1 <= v2)
+        _ => throw(RGMEError("unable to compare values ["
+                             * join(map(x -> serialize(x), vals), ", ")
+                             * "]"))
+    end
+end
+
+# Compares equality of two values
 function val_eq(vals :: Vector{<:Value}) :: Value
     @match vals begin
         [NumV(l), NumV(r)] => BoolV(l == r)
@@ -138,6 +174,10 @@ end
 
 # A mapping from op identifiers to the corresponding functions
 prim_map = Dict{String, Function}(("+" => val_add),
+                                  ("-" => val_subtract),
+                                  ("*" => val_multiply),
+                                  ("/" => val_divide),
+                                  ("<=" => val_lte),
                                   ("equal?" => val_eq))
 
 # Applies the appropriate primop for a given identifier

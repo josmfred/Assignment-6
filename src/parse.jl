@@ -1,6 +1,7 @@
 import Base.parse
 include("core.jl")
 
+#TODO: add purpose statements, fix tests: line 14 bug
 function check_numstr(sexp :: String) :: Bool
     try
         num = parse(Float64, sexp)
@@ -34,21 +35,16 @@ function get_element(arr :: Array{String,1}, num :: Integer) :: String
 end
 
 function parse_sexp(sexp :: String) :: ExprC
-
     rm_paren = remove_paren(sexp)
-
     arr_sexp = make_array(rm_paren)
 
     if (length(arr_sexp) == 1)
         if (check_numstr(sexp))
             parse_numstr(sexp)
-
         else
             IdC(sexp)
-
         end
     elseif (length(arr_sexp) == 3)
-
         sym = get_element(arr_sexp,1)
         lhs_str = get_element(arr_sexp,2)
         rhs_str = get_element(arr_sexp,3)
@@ -58,17 +54,14 @@ function parse_sexp(sexp :: String) :: ExprC
             #rhs_numc = parse_numstr(rhs_str)
             AppC(IdC(sym), [parse_sexp(lhs_str), parse_sexp(rhs_str)])
         end
-
     elseif (length(arr_sexp) > 3)
-
         sym = get_element(arr_sexp,1)
         tst = get_element(arr_sexp,2)
         thn = get_element(arr_sexp,3)
         els = get_element(arr_sexp,4)
-
+        
         if (sym == "if")
-            CondC(parse_sexp(tst),parse_sexp(thn),parse_sexp(els))
+            CondC(parse_sexp(tst), parse_sexp(thn), parse_sexp(els))
         end
-
     end
 end
